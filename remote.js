@@ -126,10 +126,12 @@ bot.on('callback_query', async (call) => {
         if (uid == call.from.id){
             if (call.data.startsWith("getUsers")){
                 let pid = parseInt(spl[2]);
-                let clis = chunkArray(jsclients);
-                let str = makeFont(`📃 | page ${pid}/${clis.length}\n👥 | users are ${jsclients.length}`);
-                for (let cli of clis[pid]){
-                    str += `\n\n👤 | <code>/panel_${crypto.createHash("md5").update(cli.client.remoteAddress).digest('hex').slice(0, 8)}</code>\n` + makeFont(`➕ | has ${cli.accessory.length} access`);
+                let clis = chunkArray(jsclients, 5);
+                let str = makeFont(`📃 | page ${clis.length != 0 ? pid+1 : 0}/${clis.length}\n👥 | users are ${jsclients.length}`);
+                if (clis.length != 0){
+                    for (let cli of clis[pid]){
+                        str += `\n\n👤 | <code>/panel_${crypto.createHash("md5").update(cli.client.remoteAddress).digest('hex').slice(0, 8)}</code>\n` + makeFont(`➕ | has ${cli.accessory.length} access`);
+                    }
                 }
                 
                 let fLayer = [];
@@ -141,7 +143,7 @@ bot.on('callback_query', async (call) => {
                     })
                 }
 
-                if (pid != clis.length){
+                if (!(pid+1 >= clis.length)){
                     fLayer.push({
                         text: makeFont("next ⏭"),
                         callback_data: `getUsers_${call.from.id}_${pid+1}`
