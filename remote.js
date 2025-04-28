@@ -135,10 +135,13 @@ bot.on("message", async (msg) => {
                         let layer_index = 0;
         
                         for (let access of cli.accessory) {
-                            if (layers[layer_index].length === 3) {
+                            if (layers[layer_index].length === 2 && layer_index % 2 === 0) {
                                 layer_index++;
                                 layers[layer_index] = [];
-                            }
+                            } else if ( layers[layer_index].length === 1 && !(layer_index % 2 === 0) ){
+                                layer_index++;
+                                layers[layer_index] = [];
+                            } // else if ( layers[layer_index].length === 1 && layer_index % 2 === 0 ) { true; }
                             switch (access) {
                                 case "getApplication":
                                     layers[layer_index].push({
@@ -332,10 +335,13 @@ bot.on('callback_query', async (call) => {
                         let layer_index = 0;
         
                         for (let access of cli.accessory) {
-                            if (layers[layer_index].length === 3) {
+                            if (layers[layer_index].length === 2 && layer_index % 2 === 0) {
                                 layer_index++;
                                 layers[layer_index] = [];
-                            }
+                            } else if ( layers[layer_index].length === 1 && !(layer_index % 2 === 0) ){
+                                layer_index++;
+                                layers[layer_index] = [];
+                            } // else if ( layers[layer_index].length === 1 && layer_index % 2 === 0 ) { true; }
                             switch (access) {
                                 case "getApplication":
                                     layers[layer_index].push({
