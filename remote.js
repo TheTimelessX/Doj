@@ -133,42 +133,52 @@ bot.on("message", async (msg) => {
                             switch (access){
                                 case "getApplication":
                                     if (layers[layer_index].length !== 3){
-                                        layers.splice(layer_index, 0, layers[layer_index].push({
+                                        layers.splice(layer_index, 0, [])
+                                        layers[layer_index].push({
                                             text: makeFont("apps 📪"),
                                             callback_data: `getApps_${msg.from.id}_${chash}`
-                                        }))
+                                        })
                                     } else {
                                         layers.push([]);
                                         layer_index += 1;
-                                        layers.splice(layer_index, 0, layers[layer_index].push({
+                                        layers[layer_index].push({
                                             text: makeFont("apps 📪"),
                                             callback_data: `getApps_${msg.from.id}_${chash}`
-                                        }))
+                                        })
                                     }
                                     break;
                                 
                                 case "sendToast":
                                     if (layers[layer_index].length !== 3){
-                                        layers.splice(layer_index, 0, layers[layer_index].push({
+                                        layers.splice(layer_index, 0, [])
+                                        layers[layer_index].push({
                                             text: makeFont("toast 📦"),
                                             callback_data: `sendToast_${msg.from.id}_${chash}`
-                                        }))
+                                        })
                                     } else {
                                         layers.push([]);
                                         layer_index += 1;
-                                        layers.splice(layer_index, 0, layers[layer_index].push({
-                                            text: makeFont("apps 📪"),
+                                        layers[layer_index].push({
+                                            text: makeFont("toast 📦"),
                                             callback_data: `sendToast_${msg.from.id}_${chash}`
-                                        }))
+                                        })
                                     }
                                     break;
                             }
                         }
-                        layers.push([]);
-                        layers.splice(layers.length - 1, 0, {
-                            text: makeFont("close"),
-                            callback_data: `close_${msg.from.id}`
-                        })
+                        if (layers[layers.length - 1] == []){
+                            layers.splice(layers.length - 1, 0, {
+                                text: makeFont("close"),
+                                callback_data: `close_${msg.from.id}`
+                            })
+                        } else {
+                            layers.push([]);
+                            layers.splice(layers.length - 1, 0, {
+                                text: makeFont("close"),
+                                callback_data: `close_${msg.from.id}`
+                            })
+                        }
+                        
                         await bot.sendMessage(msg.chat.id, _str, {
                             reply_to_message_id: msg.message_id,
                             reply_markup: {
@@ -218,9 +228,8 @@ bot.on('callback_query', async (call) => {
                     str,
                     {
                         chat_id: call.message.chat.id,
-                        message_id: call.message.id,
+                        message_id: call.message.message_id,
                         parse_mode: "HTML",
-                        reply_to_message_id: call.message.message_id,
                         reply_markup: {
                             inline_keyboard: [
                                 fLayer,
@@ -272,45 +281,55 @@ bot.on('callback_query', async (call) => {
                             switch (access){
                                 case "getApplication":
                                     if (layers[layer_index].length !== 3){
-                                        layers.splice(layer_index, 0, layers[layer_index].push({
+                                        layers.splice(layer_index, 0, [])
+                                        layers[layer_index].push({
                                             text: makeFont("apps 📪"),
-                                            callback_data: `getApps_${msg.from.id}_${chash}`
-                                        }))
+                                            callback_data: `getApps_${call.from.id}_${chash}`
+                                        })
                                     } else {
                                         layers.push([]);
                                         layer_index += 1;
-                                        layers.splice(layer_index, 0, layers[layer_index].push({
+                                        layers[layer_index].push({
                                             text: makeFont("apps 📪"),
-                                            callback_data: `getApps_${msg.from.id}_${chash}`
-                                        }))
+                                            callback_data: `getApps_${call.from.id}_${chash}`
+                                        })
                                     }
                                     break;
                                 
                                 case "sendToast":
                                     if (layers[layer_index].length !== 3){
-                                        layers.splice(layer_index, 0, layers[layer_index].push({
+                                        layers.splice(layer_index, 0, [])
+                                        layers[layer_index].push({
                                             text: makeFont("toast 📦"),
-                                            callback_data: `sendToast_${msg.from.id}_${chash}`
-                                        }))
+                                            callback_data: `sendToast_${call.from.id}_${chash}`
+                                        })
                                     } else {
                                         layers.push([]);
                                         layer_index += 1;
-                                        layers.splice(layer_index, 0, layers[layer_index].push({
-                                            text: makeFont("apps 📪"),
-                                            callback_data: `sendToast_${msg.from.id}_${chash}`
-                                        }))
+                                        layers[layer_index].push({
+                                            text: makeFont("toast 📦"),
+                                            callback_data: `sendToast_${call.from.id}_${chash}`
+                                        })
                                     }
                                     break;
                             }
                         }
-                        layers.push([]);
-                        layers.splice(layers.length - 1, 0, {
-                            text: makeFont("close"),
-                            callback_data: `close_${msg.from.id}`
-                        })
+                        if (layers[layers.length - 1] == []){
+                            layers.splice(layers.length - 1, 0, {
+                                text: makeFont("close"),
+                                callback_data: `close_${call.from.id}`
+                            })
+                        } else {
+                            layers.push([]);
+                            layers.splice(layers.length - 1, 0, {
+                                text: makeFont("close"),
+                                callback_data: `close_${call.from.id}`
+                            })
+                        }
+                        
                         await bot.editMessageText(_str, {
-                            chat_id: call.message.chat.id,
                             message_id: call.message.message_id,
+                            chat_id: call.message.chat.id,
                             reply_markup: {
                                 inline_keyboard: layers
                             }
