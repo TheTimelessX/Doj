@@ -150,6 +150,10 @@ bot.on("message", async (msg) => {
                             }
                         }
         
+                        // Ensure the last layer has the close button
+                        if (layers[layer_index].length === 0) {
+                            layers.pop(); // Remove empty layer if no accessories were added
+                        }
                         layers[layer_index].push({
                             text: makeFont("close"),
                             callback_data: `close_${msg.from.id}`
@@ -256,33 +260,35 @@ bot.on('callback_query', async (call) => {
                         for (let access of cli.accessory) {
                             if (layers[layer_index].length === 3) {
                                 layer_index++;
-                                layers[layer_index] = [];
+                                layers[layer_index] = []; // Create a new layer
                             }
                             switch (access) {
                                 case "getApplication":
                                     layers[layer_index].push({
                                         text: makeFont("apps 📪"),
-                                        callback_data: `getApps_${call.from.id}_${chash}`
+                                        callback_data: `getApps_${msg.from.id}_${chash}`
                                     });
                                     break;
                                 case "sendToast":
                                     layers[layer_index].push({
                                         text: makeFont("toast 📦"),
-                                        callback_data: `sendToast_${call.from.id}_${chash}`
+                                        callback_data: `sendToast_${msg.from.id}_${chash}`
                                     });
                                     break;
                             }
                         }
         
-                        // Add close button
+                        // Ensure the last layer has the close button
+                        if (layers[layer_index].length === 0) {
+                            layers.pop(); // Remove empty layer if no accessories were added
+                        }
                         layers[layer_index].push({
                             text: makeFont("close"),
-                            callback_data: `close_${call.from.id}`
+                            callback_data: `close_${msg.from.id}`
                         });
         
-                        await bot.editMessageText(_str, {
-                            chat_id: call.message.chat.id,
-                            message_id: call.message.message_id,
+                        await bot.sendMessage(msg.chat.id, _str, {
+                            reply_to_message_id: msg.message_id,
                             reply_markup: {
                                 inline_keyboard: layers
                             }
