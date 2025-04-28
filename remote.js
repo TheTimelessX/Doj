@@ -315,13 +315,13 @@ bot.on('callback_query', async (call) => {
                             }
                         }
                         if (layers[layers.length - 1] == []){
-                            layers.splice(layers.length - 1, 0, {
+                            layers[layers.length - 1].push({
                                 text: makeFont("close"),
                                 callback_data: `close_${call.from.id}`
                             })
                         } else {
                             layers.push([]);
-                            layers.splice(layers.length - 1, 0, {
+                            layers[layers.length - 1].push({
                                 text: makeFont("close"),
                                 callback_data: `close_${call.from.id}`
                             })
